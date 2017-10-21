@@ -1,0 +1,98 @@
+#!/bin/bash
+declare -a KEYWORDS=(COMMITHASH COMMITHASHABBREVIATED AUTHORNAME AUTHORDATEISO8601 COMMITTERNAME COMMITTERDATEISO8601 BRANCH FILE)
+#---------------------------------------------------------
+# Useful options for git log --pretty=format
+#---------------------------------------------------------
+# Option	   Description of Output
+# ------     ---------------------
+# %H         Commit hash
+# %h         Abbreviated commit hash
+# %T         Tree hash
+# %t         Abbreviated tree hash
+# %P         Parent hashes
+# %p         Abbreviated parent hashes
+# %an        Author name
+# %ae        Author e-mail
+# %ad        Author date (format respects the –date= option)
+# %ar        Author date, relative
+# %cn        Committer name
+# %ce        Committer email
+# %cd        Committer date
+# %cr        Committer date, relative
+# %s         Subject
+#---------------------------------------------------------
+
+#---------------------------------------------------------
+# Function usage to show the way to use the script
+#---------------------------------------------------------
+usage()
+{
+cat << EOF
+usage: $0 options
+
+Required parameters:
+-m <MODE> The mode either SMUDGE or CLEAN
+-f <FILE> The file to be filtered
+
+OPTIONS:
+   -h        Show this message
+   -m <MODE> The mode either SMUDGE or CLEAN
+   -f <FILE> The file to be filtered
+EOF
+}
+
+
+#---------------------------------------------------------
+# Function parse log to array
+#---------------------------------------------------------
+log_array()
+{
+  #Get the git branch we are on
+  BRANCH=$(git branch | awk '/*/ {print $2}')
+  #Get the values for the log we are interested in
+  #The -1 only returns the first line
+  LOG=$(git log --pretty=format:"%H|%h|%an|%ai|%cn|%ci|$BRANCH|$FILE" -1 2>/dev/null)
+  #Convert the LOG value to an array
+  IFS='|' read -a LOG_ARRAY <<<"$LOG"
+}
+
+while getopts "hm:f:" OPTION
+do
+  case "${OPTION}" in
+    h)
+      usage
+      exit 0
+      ;;
+    m)
+      MODE="${OPTARG^^}"
+      ;;
+    f)
+      FILE="${OPTARG}"
+      ;;
+    ?)
+      usage
+      exit
+      ;;
+  esac
+done
+
+if [[ -z "${MODE}" ]]; then
+  printf "ERROR -m <MODE> is mandatory\n"
+  usage
+  exit 1
+elif [[ "${MODE}" != "SMUDGE" && "${MODE}" != "CLEAN" ]]; then
+  printf "ERROR -m <MODE> must be SMUDGE or CLEAN - got %s\n" ${MODE}
+  exit 1
+fi
+
+if [[ -z "${FILE}" ]]; then
+  printf "ERROR -f <FILE> is a required parameter\n"
+  usage
+  exit 1
+fi
+
+log_array #Call the function
+
+printf 'Test result - File=%s and Mode=%s\nLog=%s\n' ${FILE} ${MODE} > test.txt
+echo "${LOG}" >> test.txt
+echo "${LOG_ARRAY[@]}" >> test.txt

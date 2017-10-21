@@ -1,0 +1,3 @@
+*.sql filter=keywords
+*.vw filter=keywords
+
