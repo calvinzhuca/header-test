@@ -1,3 +1,2 @@
 #!/bin/bash
-echo "clean" >> clean.txt
-date >> clean.txt
+sed -i 'i1header line' *.vw

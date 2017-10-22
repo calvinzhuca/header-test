@@ -1,3 +1,2 @@
 #!/bin/bash
-echo "sumdge" >> smudge.txt
-date >> smudge.txt
+sed -i 'i1xxxheader line' *.vw
